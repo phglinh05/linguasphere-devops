@@ -1,39 +1,72 @@
-async function seedIfEmpty(db) {
-  const posts = db.collection("posts");
-  const categories = db.collection("categories");
+const mongoose = require("mongoose");
 
-  // Prevent duplicates in the future
-  await posts.createIndex({ slug: 1 }, { unique: true });
-  await categories.createIndex({ slug: 1 }, { unique: true });
+const AuthorSchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    avatar_url: { type: String, default: "" },
+  },
+  { _id: false }
+);
 
-  // Seed only when DB is empty
-  if ((await posts.countDocuments({})) > 0) return;
+const CategorySchema = new mongoose.Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    slug: { type: String, required: true, unique: true, trim: true },
+    cover_image_url: { type: String, default: "" },
+  },
+  { timestamps: true }
+);
 
-  await categories.insertMany([
-    {
-      name: "DevSecOps",
-      slug: "devsecops",
-      cover_image_url: "https://picsum.photos/seed/devsecops/1200/900",
-    },
-    {
-      name: "Cloud & AWS",
-      slug: "cloud-aws",
-      cover_image_url: "https://picsum.photos/seed/cloudaws/1200/900",
-    },
-    {
-      name: "Kubernetes",
-      slug: "kubernetes",
-      cover_image_url: "https://picsum.photos/seed/k8s/1200/900",
-    },
-    {
-      name: "Observability",
-      slug: "observability",
-      cover_image_url: "https://picsum.photos/seed/observability/1200/900",
-    },
+const PostSchema = new mongoose.Schema(
+  {
+    type: { type: String, enum: ["blog", "marketing"], required: true },
+    slug: { type: String, required: true, unique: true, trim: true },
+    title: { type: String, required: true, trim: true },
+    excerpt: { type: String, default: "" },
+
+    hero_image_url: { type: String, default: "" },
+    thumbnail_url: { type: String, default: "" },
+
+    // blog fields
+    views: { type: Number, default: 0 },
+    topic: { type: String, default: "" },
+
+    // marketing fields
+    tag: { type: String, default: "" },
+    reading_minutes: { type: Number, default: 30 },
+    price_cents: { type: Number, default: 0 },
+    old_price_cents: { type: Number, default: 0 },
+
+    author: { type: AuthorSchema, required: true },
+  },
+  { timestamps: true }
+);
+
+const SubscriberSchema = new mongoose.Schema(
+  {
+    email: { type: String, required: true, unique: true, trim: true, lowercase: true },
+  },
+  { timestamps: true }
+);
+
+const Category = mongoose.models.Category || mongoose.model("Category", CategorySchema);
+const Post = mongoose.models.Post || mongoose.model("Post", PostSchema);
+const Subscriber = mongoose.models.Subscriber || mongoose.model("Subscriber", SubscriberSchema);
+
+// ---------- Seed ----------
+async function seedIfEmpty() {
+  const count = await Post.countDocuments({});
+  if (count > 0) return;
+
+  await Category.insertMany([
+    { name: "DevSecOps", slug: "devsecops", cover_image_url: "https://picsum.photos/seed/devsecops/1200/900" },
+    { name: "Cloud & AWS", slug: "cloud-aws", cover_image_url: "https://picsum.photos/seed/cloudaws/1200/900" },
+    { name: "Kubernetes", slug: "kubernetes", cover_image_url: "https://picsum.photos/seed/k8s/1200/900" },
+    { name: "Observability", slug: "observability", cover_image_url: "https://picsum.photos/seed/observability/1200/900" },
   ]);
 
-  await posts.insertMany([
-    // ===== HERO (Blog) =====
+  await Post.insertMany([
+    // HERO blog
     {
       type: "blog",
       slug: "agentic-aiops-keep-p95-under-200ms",
@@ -47,7 +80,7 @@ async function seedIfEmpty(db) {
       topic: "DevSecOps",
     },
 
-    // ===== RELATED BLOG (enough items for paging) =====
+    // RELATED blog
     {
       type: "blog",
       slug: "dockerfile-to-compose-production-checklist",
@@ -96,28 +129,17 @@ async function seedIfEmpty(db) {
       views: 84510,
       topic: "Observability",
     },
-    {
-      type: "blog",
-      slug: "aws-vpc-mental-model",
-      title: "AWS VPC: The Mental Model That Makes Networking Click",
-      excerpt:
-        "Subnets, route tables, NAT/IGW, SG/NACL — explained from an architecture perspective, not memorization.",
-      hero_image_url: "https://picsum.photos/seed/blog-vpc/1600/900",
-      thumbnail_url: "https://picsum.photos/seed/blog-vpc-thumb/800/500",
-      author: { name: "Minh", avatar_url: "https://i.pravatar.cc/80?img=12" },
-      views: 99210,
-      topic: "Cloud & AWS",
-    },
 
-    // ===== MARKETING (Courses) =====
+    // MARKETING courses
     {
       type: "marketing",
       slug: "aws-saa-foundations",
-      title: "AWS Solutions Architect — Foundations",
+      title: "AWS Certified Solutions Architect",
       excerpt:
         "Learn IAM, VPC, EC2, and S3. Choose the right services for real problems with cost and security in mind.",
       tag: "Cloud",
-      thumbnail_url: "https://images.unsplash.com/photo-1736220690063-d65115e1bec6?auto=format&fit=crop&w=1200&q=80",
+      thumbnail_url:
+        "https://images.unsplash.com/photo-1736220690063-d65115e1bec6?auto=format&fit=crop&w=1200&q=80",
       author: { name: "Lina", avatar_url: "https://i.pravatar.cc/80?img=47" },
       reading_minutes: 35,
       price_cents: 8900,
@@ -165,4 +187,45 @@ async function seedIfEmpty(db) {
   ]);
 }
 
-module.exports = { seedIfEmpty };
+// ---------- Queries used by controller ----------
+async function getHero() {
+  return Post.findOne({ type: "blog" }).sort({ createdAt: -1 }).lean();
+}
+
+async function getCategories() {
+  return Category.find({}).sort({ createdAt: 1 }).limit(50).lean();
+}
+
+async function getRelated(page = 0, pageSize = 2) {
+  const q = { type: "blog" };
+  const total = await Post.countDocuments(q);
+  const items = await Post.find(q).sort({ createdAt: -1 }).skip(page * pageSize).limit(pageSize).lean();
+  return { items, meta: { page, page_size: pageSize, total } };
+}
+
+async function getMarketing(page = 0, pageSize = 4) {
+  const q = { type: "marketing" };
+  const total = await Post.countDocuments(q);
+  const items = await Post.find(q).sort({ createdAt: -1 }).skip(page * pageSize).limit(pageSize).lean();
+  return { items, meta: { page, page_size: pageSize, total } };
+}
+
+async function subscribe(email) {
+  const exists = await Subscriber.findOne({ email });
+  if (exists) return { ok: true, message: "This email is already subscribed." };
+
+  await Subscriber.create({ email });
+  return { ok: true, message: "Subscribed successfully!" };
+}
+
+module.exports = {
+  Category,
+  Post,
+  Subscriber,
+  seedIfEmpty,
+  getHero,
+  getCategories,
+  getRelated,
+  getMarketing,
+  subscribe,
+};

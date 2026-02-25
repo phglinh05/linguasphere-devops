@@ -1,8 +1,7 @@
-// BLOG PAGE API
-// - Default: call backend directly (local dev)
-// - Override: ?api=http://localhost:8000 (or any other URL)
-let API_BASE = "http://localhost:8000";
+// BLOG PAGE API (local)
+let API_BASE = "http://localhost:8000/api/blog";
 
+// optional override: ?api=http://localhost:8000/api/blog
 (() => {
   const u = new URL(window.location.href);
   const api = u.searchParams.get("api");
@@ -174,7 +173,6 @@ async function loadAll() {
     getJSON("/posts/marketing?page=0&page_size=4"),
   ]);
 
-  $("heroAuthor").textContent = hero.author?.name || "Author";
   $("heroTitle").textContent = hero.title || "";
   $("heroExcerpt").textContent = hero.excerpt || "";
   $("heroImage").src = hero.hero_image_url || hero.thumbnail_url || "";
