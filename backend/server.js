@@ -4,11 +4,14 @@ const dns = require("dns");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const express = require("express");
+const mongoose = require("mongoose");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const mongoose = require("mongoose");
+const path = require("path");
 
 const blogRoutes = require("./src/routes/blogRoutes");
+const authRoutes = require("./src/routes/authRoutes");
+const { authPageMiddleware } = require("./src/midlleware/authMiddleware");
 const Blog = require("./src/models/Blog");
 
 const PORT = process.env.PORT || 8000;
@@ -25,20 +28,36 @@ async function main() {
   app.use(express.json());
   app.use(cookieParser());
 
-  // mongoose connect
+  // static frontend
+  app.use(express.static(path.join(__dirname, "../frontend")));
+
+  // MongoDB connect
   await mongoose.connect(process.env.MONGO_URL, {
     dbName: process.env.DB_NAME || "devsecops",
   });
 
-  // seed blog data once
+  console.log("MongoDB connected");
+
+  // seed blog data
   await Blog.seedIfEmpty();
 
-  // routes
+  // API routes
   app.use("/api/blog", blogRoutes);
+  app.use("/api/auth", authRoutes);
+
+  app.get("/", (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/pages/auth.html"));
+  });
+
+  app.get("/dashboard", authPageMiddleware, (req, res) => {
+    res.sendFile(path.join(__dirname, "../frontend/pages/dashboard.html"));
+  });
 
   app.get("/health", (req, res) => res.json({ ok: true }));
 
-  app.listen(PORT, "0.0.0.0", () => console.log(`Backend running on port ${PORT}`));
+  app.listen(PORT, "0.0.0.0", () =>
+    console.log(`Backend running on port ${PORT}`)
+  );
 }
 
 main().catch((err) => {
