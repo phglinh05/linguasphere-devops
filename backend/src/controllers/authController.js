@@ -63,7 +63,22 @@ exports.login = async(req, res) => {
     }
 }
 
+exports.me = async (req, res) => {
+  try {
+    const user = await User.findById(req.user.id).select("username email").lean();
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json({
+      authenticated: true,
+      user: { id: String(user._id), username: user.username, email: user.email },
+    });
+  } catch (err) {
+    console.error("Me error:", err);
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
 exports.logout = (req, res) => {
-    res.clearCookie("token");
+    res.clearCookie("token", { httpOnly: true, sameSite: "lax", secure: false, path: "/"});
     res.json({message: "Logged out"});
 }

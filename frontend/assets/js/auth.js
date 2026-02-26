@@ -5,6 +5,8 @@ const registerForm = document.getElementById("registerForm");
 const loginMessage = document.getElementById("loginMessage");
 const registerMessage = document.getElementById("registerMessage");
 
+const AUTH_BASE = "/api/auth";
+
 loginBtn.onclick = function() {
     loginForm.style.display = "block";
     registerForm.style.display = "none";
@@ -26,7 +28,7 @@ loginForm.addEventListener("submit", async(e) => {
     const password = loginForm.querySelector("input[type='password']").value;
     const remember = document.getElementById("remember").checked;
 
-    const res = await fetch("http://localhost:5000/auth/login", {
+    const res = await fetch(`${AUTH_BASE}/login`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         credentials: "include",
@@ -57,7 +59,7 @@ registerForm.addEventListener("submit", async(e) => {
         return;
     }
 
-    const res = await fetch("http://localhost:5000/auth/register", {
+    const res = await fetch(`${AUTH_BASE}/register`, {
         method: "POST",
         headers: {"Content-Type": "application/json"},
         body: JSON.stringify({username, email, password, cfpassword})
@@ -76,7 +78,7 @@ registerForm.addEventListener("submit", async(e) => {
 
 async function checkAuth() {
     try {
-        const res = await fetch("http://localhost:5000/auth/verify", {
+        const res = await fetch(`${AUTH_BASE}/me`, {
             method: "GET",
             credentials: "include"
         });

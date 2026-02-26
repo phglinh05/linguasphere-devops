@@ -1,5 +1,6 @@
 // BLOG PAGE API (local)
-let API_BASE = "http://localhost:8000/api/blog";
+let API_BASE = "/api/blog";
+const AUTH_BASE = "/api/auth";
 
 // optional override: ?api=http://localhost:8000/api/blog
 (() => {
@@ -12,6 +13,31 @@ const $ = (id) => document.getElementById(id);
 
 let relatedPage = 0;
 let relatedCache = {};
+
+async function requireAuthAndHydrateUser() {
+  try {
+    const res = await fetch(`${AUTH_BASE}/me`, { credentials: "include" });
+    if (!res.ok) throw new Error("Not authenticated");
+
+    const data = await res.json();
+    const username = data?.user?.username || "User";
+    const el = document.getElementById("navUsername");
+    if (el) el.textContent = username;
+
+    const btn = document.getElementById("btnLogout");
+    if (btn) {
+      btn.addEventListener("click", async () => {
+        await fetch(`${AUTH_BASE}/logout`, {
+          method: "POST",
+          credentials: "include",
+        });
+        window.location.href = "/";
+      });
+    }
+  } catch {
+    window.location.href = "/";
+  }
+}
 
 function openPostModal(post) {
   if (!post) return;
@@ -27,7 +53,6 @@ function openPostModal(post) {
   const av = document.getElementById("postModalAvatar");
   av.src = post.author?.avatar_url || "https://i.pravatar.cc/80?img=47";
 
-  // bootstrap modal
   const modal = new bootstrap.Modal(document.getElementById("postModal"));
   modal.show();
 }
@@ -45,7 +70,7 @@ function bindReadMoreButtons() {
 const relatedPageSize = 2;
 
 async function getJSON(path) {
-  const res = await fetch(`${API_BASE}${path}`);
+  const res = await fetch(`${API_BASE}${path}`, { credentials: "include" });
   if (!res.ok) throw new Error(`Fetch failed: ${path}`);
   return res.json();
 }
@@ -216,6 +241,8 @@ function wireEvents() {
 }
 
 (async function main() {
+  await requireAuthAndHydrateUser();
+
   wireEvents();
   try {
     await loadAll();

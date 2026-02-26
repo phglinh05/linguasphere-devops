@@ -11,7 +11,7 @@ const path = require("path");
 
 const blogRoutes = require("./src/routes/blogRoutes");
 const authRoutes = require("./src/routes/authRoutes");
-const { authPageMiddleware } = require("./src/midlleware/authMiddleware");
+const { authPageMiddleware } = require("./src/middleware/authMiddleware");
 const Blog = require("./src/models/Blog");
 
 const PORT = process.env.PORT || 8000;
@@ -50,7 +50,7 @@ async function main() {
   });
 
   app.get("/dashboard", authPageMiddleware, (req, res) => {
-    res.sendFile(path.join(__dirname, "../frontend/pages/dashboard.html"));
+    res.sendFile(path.join(__dirname, "../frontend/pages/blog.html"));
   });
 
   app.get("/health", (req, res) => res.json({ ok: true }));
