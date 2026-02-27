@@ -6,14 +6,16 @@ services:
       context: ../backend
       dockerfile: Dockerfile
     ports:
-      -"5000:5000"
+      - "5000:5000"
     volumes:
       - ../backend:/app
       - /app/node_modules
     environment:
       - MONGO_URL=${MONGODB_URI}
+      - DB_NAME=${DB_NAME}
+      - PORT=5000
 
-  frontend: 
+  frontend:
     build:
       context: ../frontend
       dockerfile: Dockerfile
