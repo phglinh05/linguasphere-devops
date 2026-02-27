@@ -1,30 +1,34 @@
-require("dotenv").config();
+const fs = require("fs");
+const path = require("path");
+
+// Try to load .env from common locations (root-first)
+const candidates = [
+  path.resolve(process.cwd(), ".env"),
+  path.resolve(__dirname, ".env"),
+  path.resolve(__dirname, "../.env"),
+  path.resolve(__dirname, "../../.env"),
+];
+
+const envPath = candidates.find((p) => fs.existsSync(p));
+require("dotenv").config(envPath ? { path: envPath } : undefined);
 
 const dns = require("dns");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
 
 const express = require("express");
 const mongoose = require("mongoose");
-const cors = require("cors");
 const cookieParser = require("cookie-parser");
-const path = require("path");
 
 const blogRoutes = require("./src/routes/blogRoutes");
 const authRoutes = require("./src/routes/authRoutes");
 const { authPageMiddleware } = require("./src/middleware/authMiddleware");
 const Blog = require("./src/models/Blog");
 
-const PORT = process.env.PORT || 8000;
-
-const CORS_ORIGINS = (process.env.CORS_ORIGINS || "http://localhost:3000")
-  .split(",")
-  .map((s) => s.trim())
-  .filter(Boolean);
+const PORT = process.env.PORT || 5000;
 
 async function main() {
   const app = express();
 
-  app.use(cors({ origin: CORS_ORIGINS, credentials: true }));
   app.use(express.json());
   app.use(cookieParser());
 

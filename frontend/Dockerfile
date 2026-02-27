@@ -1,9 +1,11 @@
-FROM nginx:alpine
+FROM nginx:1.27-alpine
 
-# Copy nginx config
-COPY nginx.conf /etc/nginx/conf.d/default.conf
+ENV PORT=5000
 
-# Copy static files
+# Replace default site config
+COPY nginx.conf /etc/nginx/templates/default.conf.template
+
+# Copy static frontend
 COPY . /usr/share/nginx/html
 
 EXPOSE 80

@@ -2,7 +2,7 @@
 let API_BASE = "/api/blog";
 const AUTH_BASE = "/api/auth";
 
-// optional override: ?api=http://localhost:8000/api/blog
+// optional override: ?api=http://localhost:5000/api/blog
 (() => {
   const u = new URL(window.location.href);
   const api = u.searchParams.get("api");
