@@ -1,16 +1,4 @@
-const fs = require("fs");
 const path = require("path");
-
-// Try to load .env from common locations (root-first)
-const candidates = [
-  path.resolve(process.cwd(), ".env"),
-  path.resolve(__dirname, ".env"),
-  path.resolve(__dirname, "../.env"),
-  path.resolve(__dirname, "../../.env"),
-];
-
-const envPath = candidates.find((p) => fs.existsSync(p));
-require("dotenv").config(envPath ? { path: envPath } : undefined);
 
 const dns = require("dns");
 dns.setServers(["8.8.8.8", "8.8.4.4"]);
@@ -34,9 +22,8 @@ async function main() {
 
   // static frontend
   app.use(express.static(path.join(__dirname, "../frontend")));
-
-  // MongoDB connect
-  await mongoose.connect(process.env.MONGO_URL, {
+  
+  await mongoose.connect(process.env.MONGODB_URI, {
     dbName: process.env.DB_NAME || "devsecops",
   });
 

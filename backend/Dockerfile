@@ -1,5 +1,5 @@
 # 1. Base image: Node.js LTS
-FROM node:18-alpine
+FROM node:25-alpine
 
 # 2. Set working directory inside container
 WORKDIR /app
@@ -8,7 +8,7 @@ WORKDIR /app
 COPY package*.json ./
 
 # 4. Install dependencies
-RUN npm install --production
+RUN npm install --omit=dev
 
 # 5. Copy source code
 COPY . .
