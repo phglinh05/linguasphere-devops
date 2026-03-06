@@ -26,3 +26,8 @@ jobs:
         run: |
           test -f docker/docker-compose.yml
           echo "docker/docker-compose.yml found."
+
+      - name: SonarQube Scan
+        uses: SonarSource/sonarqube-scan-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
