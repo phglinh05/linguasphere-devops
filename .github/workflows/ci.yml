@@ -11,7 +11,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Show repo structure
+      - name: Show repo structure (optional, có thể xóa)
         run: |
           pwd
           ls -la
@@ -22,18 +22,13 @@ jobs:
           echo "=== docker ==="
           ls -la docker || true
 
-      - name: Validate docker-compose file exists
-        run: |
-          test -f docker/docker-compose.yml
-          echo "docker/docker-compose.yml found."
-
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v2
         with:
-         args: >
-           -Dsonar.projectKey=linhphuongbae_linguasphere-devsecops
-           -Dsonar.organization=linhphuongbae
-           -Dsonar.sources=.
+          args: >
+            -Dsonar.projectKey=linhphuongbae_linguasphere-devsecops
+            -Dsonar.organization=linhphuongbae
+            -Dsonar.sources=.
         env:
-         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-         SONAR_HOST_URL: https://sonarcloud.io
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
