@@ -11,7 +11,7 @@ jobs:
       - name: Checkout source
         uses: actions/checkout@v4
 
-      - name: Show repo structure (optional, có thể xóa)
+      - name: Show repo structure
         run: |
           pwd
           ls -la
@@ -21,6 +21,11 @@ jobs:
           ls -la frontend || true
           echo "=== docker ==="
           ls -la docker || true
+
+      - name: Validate docker-compose file exists 
+        run: |
+          test -f docker/docker-compose.yml
+          echo "docker/docker-compose.yml found."
 
       - name: SonarCloud Scan
         uses: SonarSource/sonarqube-scan-action@v2
