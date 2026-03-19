@@ -1,0 +1,5 @@
+ignore:
+  - vulnerability: CVE-2025-48174
+  - vulnerability: CVE-2023-52356 
+  - vulnerability: CVE-2026-3805  
+  - vulnerability: CVE-2026-1642

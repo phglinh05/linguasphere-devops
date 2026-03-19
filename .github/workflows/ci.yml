@@ -10,6 +10,8 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Show repo structure
         run: |
@@ -28,12 +30,49 @@ jobs:
           echo "docker/docker-compose.yml found."
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v2
+        uses: SonarSource/sonarqube-scan-action@v6
         with:
+          projectBaseDir: .
           args: >
             -Dsonar.projectKey=linhphuongbae_linguasphere-devsecops
             -Dsonar.organization=linhphuongbae
-            -Dsonar.sources=.
+            -Dsonar.sources=backend,frontend
+            -Dsonar.branch.name=develop
+            -Dsonar.scm.provide=git
+            -Dsonar.verbose=true
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
+      
+      - name: Login to DockerHub
+        run: |
+          echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
+
+      - name: Build and Scan Backend
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:latest ./backend
+
+      - name: Instal Grype
+        run: |
+          curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh
+          sudo mv ./bin/grype /usr/local/bin/
+
+      - name: Scan Backend with Grype
+        run: |
+          grype docker:${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:latest --fail-on critical
+      
+      - name: Push Backendimage
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:latest
+
+      - name: Build and Scan frontend
+        run: |
+          docker build -t ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-frontend:latest ./frontend
+      
+      - name: Scan Frontend with Grype
+        run: |
+          grype docker:${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-frontend:latest --fail-on critical
+      
+      - name: Push Frontend image
+        run: |
+          docker push ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-frontend:latest
