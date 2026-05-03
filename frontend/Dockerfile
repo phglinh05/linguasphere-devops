@@ -2,7 +2,6 @@ FROM nginx:1.27-alpine
 
 RUN apk update && apk upgrade --no-cache
 
-# Replace default site config with yours
 COPY nginx.conf /etc/nginx/conf.d/default.conf
 
 COPY pages/ /usr/share/nginx/html/
