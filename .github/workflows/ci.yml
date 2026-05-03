@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
@@ -34,16 +34,16 @@ jobs:
           echo "docker/docker-compose.yml found."
 
       - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v6
+        uses: SonarSource/sonarqube-scan-action@v8
         with:
           projectBaseDir: .
           args: >
-            -Dsonar.projectKey=linhphuongbae_linguasphere-devsecops
-            -Dsonar.organization=linhphuongbae
-            -Dsonar.sources=backend,frontend
-            -Dsonar.branch.name=develop
-            -Dsonar.scm.provide=git
-            -Dsonar.verbose=true
+            "-Dsonar.projectKey=linhphuongbae_linguasphere-devsecops"
+            "-Dsonar.organization=linhphuongbae"
+            "-Dsonar.sources=backend,frontend"
+            "-Dsonar.branch.name=develop"
+            "-Dsonar.scm.provide=git"
+            "-Dsonar.verbose=true"
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: https://sonarcloud.io
