@@ -13,7 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout source
-        uses: actions/checkout@v6
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -38,7 +38,7 @@ jobs:
         with:
           projectBaseDir: .
           args: >
-            "-Dsonar.projectKey=linhphuongbae_linguasphere-devsecops"
+            "-Dsonar.projectKey=linhphuongbae_linguasphere-devops"
             "-Dsonar.organization=linhphuongbae"
             "-Dsonar.sources=backend,frontend"
             "-Dsonar.branch.name=develop"
@@ -59,7 +59,7 @@ jobs:
             -t ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:${{ env.IMAGE_TAG }} \
             ./backend
 
-      - name: Instal Grype
+      - name: Install Grype
         run: |
           curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh
           sudo mv ./bin/grype /usr/local/bin/
@@ -68,12 +68,12 @@ jobs:
         run: |
           grype docker:${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:latest --fail-on critical
       
-      - name: Push Backendimage
+      - name: Push Backend image
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:${{ env.IMAGE_TAG }}
 
-      - name: Build and Scan frontend
+      - name: Build Frontend image
         run: |
           docker build \
             -t ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-frontend:latest \
@@ -91,7 +91,7 @@ jobs:
 
       - name: Checkout GitOps repository
         if: github.event_name == 'push'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           repository: ${{ env.GITOPS_REPO }}
           token: ${{ secrets.GITOPS_TOKEN }}
