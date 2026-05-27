@@ -16,87 +16,118 @@ function mockRes() {
   return res;
 }
 
+// ═══════════════════════════════════════════════════════
+// authMiddleware (API — returns JSON)
+// ═══════════════════════════════════════════════════════
 describe("Unit Test — authMiddleware", () => {
-  beforeAll(() => {
-    process.env.JWT_SECRET = JWT_SECRET;
-  });
-
-  // ── Case: no token ────────────────────────────────────────────────────────
   test("Returns 401 when token cookie is missing", () => {
     const req = mockReq(null);
     const res = mockRes();
     const next = jest.fn();
-
     authMiddleware(req, res, next);
-
     expect(res.status).toHaveBeenCalledWith(401);
     expect(res.json).toHaveBeenCalledWith({ message: "Not authenticated" });
     expect(next).not.toHaveBeenCalled();
   });
-
-  // ── Case: valid token ─────────────────────────────────────────────────────
+ 
   test("Calls next() and sets req.user when token is valid", () => {
     const token = jwt.sign({ id: "user123" }, JWT_SECRET, { expiresIn: "1h" });
     const req = mockReq(token);
     const res = mockRes();
     const next = jest.fn();
-
     authMiddleware(req, res, next);
-
     expect(next).toHaveBeenCalled();
-    expect(req.user).toBeDefined();
     expect(req.user.id).toBe("user123");
     expect(res.status).not.toHaveBeenCalled();
   });
-
-  // ── Case: invalid token ─────────────────────────────────────────────────--
+ 
   test("Returns 403 when token signature is invalid", () => {
     const token = jwt.sign({ id: "user123" }, "wrong_secret");
     const req = mockReq(token);
     const res = mockRes();
     const next = jest.fn();
-
     authMiddleware(req, res, next);
-
     expect(res.status).toHaveBeenCalledWith(403);
     expect(res.json).toHaveBeenCalledWith({ message: "Invalid token" });
     expect(next).not.toHaveBeenCalled();
   });
-
-  // ── Case: expired token ─────────────────────────────────────────────────--
+ 
   test("Returns 403 when token is expired", () => {
-    const token = jwt.sign({ id: "user123" }, JWT_SECRET, { expiresIn: "0s" });
-    // Wait for the token to expire
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        const req = mockReq(token);
-        const res = mockRes();
-        const next = jest.fn();
-
-        authMiddleware(req, res, next);
-
-        expect(res.status).toHaveBeenCalledWith(403);
-        expect(next).not.toHaveBeenCalled();
-        resolve();
-      }, 100);
-    });
+    const expiredToken = jwt.sign(
+      { id: "user123", exp: Math.floor(Date.now() / 1000) - 1 },
+      JWT_SECRET
+    );
+    const req = mockReq(expiredToken);
+    const res = mockRes();
+    const next = jest.fn();
+    authMiddleware(req, res, next);
+    expect(res.status).toHaveBeenCalledWith(403);
+    expect(next).not.toHaveBeenCalled();
   });
-
-  // ── Case: tampered token payload ─────────────────────────────────────────
+ 
   test("Returns 403 when token payload is tampered", () => {
     const token = jwt.sign({ id: "user123" }, JWT_SECRET);
-    // Tamper payload by modifying the middle part of the JWT
     const parts = token.split(".");
-    const fakeParts = [parts[0], Buffer.from(JSON.stringify({ id: "hacker" })).toString("base64url"), parts[2]];
+    const fakeParts = [
+      parts[0],
+      Buffer.from(JSON.stringify({ id: "hacker" })).toString("base64url"),
+      parts[2],
+    ];
     const tamperedToken = fakeParts.join(".");
-
     const req = mockReq(tamperedToken);
     const res = mockRes();
     const next = jest.fn();
-
     authMiddleware(req, res, next);
-
     expect(res.status).toHaveBeenCalledWith(403);
     expect(next).not.toHaveBeenCalled();
   });
 });
+ 
+// ═══════════════════════════════════════════════════════
+// authPageMiddleware (Page routes — redirects)
+// ═══════════════════════════════════════════════════════
+describe("Unit Test — authPageMiddleware", () => {
+  test("Redirects to '/' when token cookie is missing", () => {
+    const req = mockReq(null);
+    const res = mockRes();
+    const next = jest.fn();
+    authPageMiddleware(req, res, next);
+    expect(res.redirect).toHaveBeenCalledWith("/");
+    expect(next).not.toHaveBeenCalled();
+  });
+ 
+  test("Calls next() and sets req.user when token is valid", () => {
+    const token = jwt.sign({ id: "user456" }, JWT_SECRET, { expiresIn: "1h" });
+    const req = mockReq(token);
+    const res = mockRes();
+    const next = jest.fn();
+    authPageMiddleware(req, res, next);
+    expect(next).toHaveBeenCalled();
+    expect(req.user.id).toBe("user456");
+    expect(res.redirect).not.toHaveBeenCalled();
+  });
+ 
+  test("Redirects to '/' when token signature is invalid", () => {
+    const token = jwt.sign({ id: "user456" }, "bad_secret");
+    const req = mockReq(token);
+    const res = mockRes();
+    const next = jest.fn();
+    authPageMiddleware(req, res, next);
+    expect(res.redirect).toHaveBeenCalledWith("/");
+    expect(next).not.toHaveBeenCalled();
+  });
+ 
+  test("Redirects to '/' when token is expired", () => {
+    const expiredToken = jwt.sign(
+      { id: "user456", exp: Math.floor(Date.now() / 1000) - 1 },
+      JWT_SECRET
+    );
+    const req = mockReq(expiredToken);
+    const res = mockRes();
+    const next = jest.fn();
+    authPageMiddleware(req, res, next);
+    expect(res.redirect).toHaveBeenCalledWith("/");
+    expect(next).not.toHaveBeenCalled();
+  });
+});
+ 

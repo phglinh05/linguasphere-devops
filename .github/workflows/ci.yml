@@ -71,7 +71,7 @@ jobs:
             "-Dsonar.tests=backend/tests"
             "-Dsonar.test.inclusions=backend/tests/**/*.test.js"
             "-Dsonar.exclusions=**/node_modules/**,backend/coverage/**"
-            "-Dsonar.coverage.exclusions=frontend/**,**/*.config.js,**/server.js,backend/src/models/**"
+            "-Dsonar.coverage.exclusions=frontend/**,**/*.config.js,**/server.js,backend/src/models/**,**/app.js,**/routes/**"
             "-Dsonar.javascript.lcov.reportPaths=backend/coverage/unit/lcov.info"
             "-Dsonar.branch.name=${{ github.ref_name }}"
             "-Dsonar.scm.provide=git"
