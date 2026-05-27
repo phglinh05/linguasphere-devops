@@ -72,7 +72,7 @@ jobs:
         with:
           projectBaseDir: .
           args: >
-            "-Dsonar.projectKey=linhphuongbae_linguasphere-devops"
+            "-Dsonar.projectKey=linguasphere-devops"
             "-Dsonar.organization=linhphuongbae"
             "-Dsonar.sources=backend,frontend"
             "-Dsonar.branch.name=${{ github.ref_name }}"
