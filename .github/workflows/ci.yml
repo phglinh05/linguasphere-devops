@@ -75,7 +75,6 @@ jobs:
             "-Dsonar.projectKey=linhphuongbae_linguasphere-devops"
             "-Dsonar.organization=linhphuongbae"
             "-Dsonar.sources=backend,frontend"
-            "-Dsonar.branch.name=develop"
             "-Dsonar.scm.provide=git"
             "-Dsonar.verbose=true"
         env:
