@@ -1,0 +1,100 @@
+* {
+    box-sizing: border-box;
+}
+
+body {
+    background-color: #ffffff;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+.img-box{
+    background: url(../img/ClassroomMoment.png) center / cover no-repeat;
+    height: 90%;
+    position: relative;
+    margin: 40px;
+    border-radius: 30px;
+    overflow: hidden;
+}
+
+.img-box .overlay{
+    position:absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.05);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    justify-content: end;
+    padding: 50px;
+}
+
+.img-box h2{
+    font-size: 4rem;
+}
+
+.img-box p{
+    font-size: 1rem;
+}
+
+.form-box{
+    width: 90%;
+    max-width: 900px;
+}
+
+.form-box p{
+    font-size: 1rem;
+}
+
+.switch-btn{
+    display: flex;
+    background: #cdeeee;
+    border-radius: 30px;
+    padding: 5px;
+}
+
+.switch-btn button {
+    flex:1;
+    border:none;
+    background: transparent;
+    padding: 8px 0;
+    border-radius: 30px;
+    font-size: 1rem;
+}
+
+.switch-btn .active{
+    background: #59c3c3;
+    color: white;
+}
+
+.form-label{
+    font-size: 1rem;
+}
+
+.form-control{
+    border-radius: 100px;
+    padding: 10px 16px;
+    border-color: #45b0b0;
+    font-size: 1rem;
+}
+
+.remember-forget{
+    font-size: 1rem;
+}
+
+.btn-login {
+    background: #59c3c3;
+    color: #fff;
+    border-radius: 30px;
+    padding: 10px;
+    font-size: 1rem;
+}
+
+.btn-login:hover {
+    background: #45b0b0;
+    color: #fff;
+}
+
+@media (max-width: 767px) {
+    .img-section{
+        display: none !important;
+    }
+}

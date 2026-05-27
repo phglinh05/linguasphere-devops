@@ -1,0 +1,13 @@
+node_modules
+.git
+.DS_Store
+*.log
+.env
+*.env
+secrets
+*.pem
+*.key
+*.crt
+.ssh
+.vscode
+.idea

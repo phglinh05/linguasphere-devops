@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="vi">
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>LinguaSphere - Blog Page</title>
+
+    <!--
+    PROJECT: LinguaSphere DevSecOps
+    FEATURE: Blog Page (Static HTML/CSS + Bootstrap)
+    BRANCH: feature/blog-page
+  -->
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+
+    <link href="../assets/css/blog-page.css" rel="stylesheet" />
+</head>
+
+<body id="blog-page" class="bg-page">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg bg-white border-bottom sticky-top">
+        <div class="container py-2">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="#hero">
+                <div class="logo-box">TOTC</div>
+            </a>
+
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#topNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+
+            <div id="topNav" class="collapse navbar-collapse">
+                <ul class="navbar-nav mx-auto gap-lg-4">
+                    <li class="nav-item"><a class="nav-link fw-medium" href="#hero">Home</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium" href="#courses">Courses</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium" href="#footer">Careers</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium active" href="#latest">Blog</a></li>
+                    <li class="nav-item"><a class="nav-link fw-medium" href="#footer">About Us</a></li>
+                </ul>
+
+                <div class="d-flex align-items-center gap-2">
+                    <img class="rounded-circle avatar" src="https://i.pravatar.cc/48?img=47" alt="avatar">
+                    <div class="dropdown">
+                        <button class="btn btn-sm btn-light fw-medium dropdown-toggle" type="button"
+                            data-bs-toggle="dropdown" aria-expanded="false">
+                            <span id="navUsername">User</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li>
+                                <button id="btnLogout" class="dropdown-item text-danger" type="button">
+                                    <i class="bi bi-box-arrow-right me-2"></i>Logout
+                                </button>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container my-4">
+        <!-- Hero -->
+        <section id="hero" class="hero-card p-4 p-lg-5 rounded-4">
+            <div class="row g-4 align-items-center">
+                <div class="col-lg-6">
+                    <div class="small text-secondary fw-semibold">
+                        By <span class="text-dark">LinguaSphere Team</span> in <span
+                            class="text-teal">inspiration</span>
+                    </div>
+                    <h1 id="heroTitle" class="mt-2 hero-title">Loading...</h1>
+                    <p id="heroExcerpt" class="text-secondary mt-3 mb-4">...</p>
+                    <button class="btn btn-teal px-4 py-2 fw-semibold">Start learning now</button>
+                </div>
+
+                <div class="col-lg-6">
+                    <div class="rounded-4 overflow-hidden bg-white shadow-sm">
+                        <div class="ratio ratio-16x9">
+                            <img id="heroImage" class="w-100 h-100 object-fit-cover" alt="hero">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reading blog list -->
+        <section id="topics" class="mt-5">
+            <h2 class="section-title">Browse by topic</h2>
+            <div id="readingGrid" class="row g-4 mt-1"></div>
+        </section>
+
+        <!-- Related Blog -->
+        <section id="latest" section class="mt-5">
+            <div class="d-flex align-items-center justify-content-between">
+                <h2 class="section-title mb-0">Latest posts</h2>
+                <a class="link-teal fw-semibold text-decoration-none" href="#latest">See all</a>
+            </div>
+
+            <div id="relatedGrid" class="row g-4 mt-1"></div>
+
+            <div class="d-flex justify-content-end gap-2 mt-3">
+                <button id="btnPrev" class="btn btn-outline-secondary btn-square" type="button" aria-label="Prev">
+                    <i class="bi bi-chevron-left"></i>
+                </button>
+                <button id="btnNext" class="btn btn-teal btn-square" type="button" aria-label="Next">
+                    <i class="bi bi-chevron-right"></i>
+                </button>
+            </div>
+        </section>
+
+        <!-- Marketing Articles -->
+        <section id="courses" section class="mt-5">
+            <div class="d-flex align-items-center justify-content-between">
+                <h2 class="section-title mb-0">Popular courses</h2>
+                <a class="link-teal fw-semibold text-decoration-none" href="#courses">See all</a>
+            </div>
+
+            <div id="marketingGrid" class="row g-4 mt-1"></div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer id="footer" class="footer mt-5 pt-5 pb-4">
+        <div class="container text-center text-white">
+            <div class="d-flex align-items-center justify-content-center gap-3 mb-4">
+                <div class="logo-box logo-box--dark">TOTC</div>
+                <div class="vr vr-white"></div>
+                <div class="fw-semibold text-white-75">Virtual Class<br>for Zoom</div>
+            </div>
+
+            <div class="fw-semibold text-white-75 mb-3">Subscribe to get our Newsletter</div>
+
+            <form id="subscribeForm" class="mx-auto subscribe-wrap">
+                <input id="subscribeEmail" type="email" class="form-control subscribe-input" placeholder="Your Email"
+                    required>
+                <button class="btn btn-teal subscribe-btn fw-semibold" type="submit">Subscribe</button>
+            </form>
+            <div id="subscribeMsg" class="small text-white-50 mt-2"></div>
+
+            <div class="small text-white-50 mt-4">
+                Careers &nbsp;|&nbsp; Privacy Policy &nbsp;|&nbsp; Terms &amp; Conditions
+            </div>
+            <div class="small text-white-50 mt-2">
+                © 2021 Class Technologies Inc.
+            </div>
+        </div>
+    </footer>
+
+    <!-- Read More Modal -->
+    <div class="modal fade" id="postModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content rounded-4">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="postModalTitle">Post</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+
+                <div class="modal-body">
+                    <div class="ratio ratio-16x9 rounded-3 overflow-hidden bg-light">
+                        <img id="postModalImage" class="w-100 h-100 object-fit-cover" alt="post">
+                    </div>
+
+                    <div class="d-flex align-items-center gap-2 mt-3 text-secondary small">
+                        <img id="postModalAvatar" width="22" height="22" class="rounded-circle" alt="author">
+                        <span class="fw-semibold" id="postModalAuthor"></span>
+                        <span class="ms-auto d-flex align-items-center gap-1">
+                            <i class="bi bi-eye"></i><span id="postModalViews"></span>
+                        </span>
+                    </div>
+
+                    <p class="text-secondary mt-3 mb-0" id="postModalExcerpt"></p>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="../assets/js/blog-page.js"></script>
+</body>
+
+</html>
