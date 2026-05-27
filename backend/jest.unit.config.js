@@ -7,4 +7,5 @@ module.exports = {
   coverageDirectory: "<rootDir>/coverage/unit",
   coverageReporters: ["text", "lcov"],
   testPathIgnorePatterns: ["/node_modules/"],
+  setupFiles: ["dotenv/config"]
 };
