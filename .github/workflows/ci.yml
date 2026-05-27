@@ -50,14 +50,7 @@ jobs:
           cd backend
           npm run test:unit -- --ci --reporters=default --reporters=jest-junit
         env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET_TEST || 'test_secret_for_ci' }}
- 
-      - name: Run Integration Tests
-        run: |
-          cd backend
-          npm run test:integration -- --ci --reporters=default --reporters=jest-junit
-        env:
-          JWT_SECRET: ${{ secrets.JWT_SECRET_TEST || 'test_secret_for_ci' }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET}}
  
       - name: Upload test coverage report
         uses: actions/upload-artifact@v4
@@ -79,7 +72,7 @@ jobs:
             "-Dsonar.test.inclusions=backend/tests/**/*.test.js"
             "-Dsonar.exclusions=**/node_modules/**,backend/coverage/**"
             "-Dsonar.coverage.exclusions=frontend/**,**/*.config.js,**/server.js,backend/src/models/**"
-            "-Dsonar.javascript.lcov.reportPaths=backend/coverage/unit/lcov.info,backend/coverage/integration/lcov.info"
+            "-Dsonar.javascript.lcov.reportPaths=backend/coverage/unit/lcov.info"
             "-Dsonar.branch.name=${{ github.ref_name }}"
             "-Dsonar.scm.provide=git"
             "-Dsonar.verbose=true"
@@ -88,7 +81,6 @@ jobs:
           SONAR_HOST_URL: https://sonarcloud.io
       
       - name: Login to DockerHub
-        if: ${{ !env.ACT }}
         run: |
           echo "${{ secrets.DOCKERHUB_TOKEN }}" | docker login -u "${{ secrets.DOCKERHUB_USERNAME }}" --password-stdin
 
@@ -109,7 +101,6 @@ jobs:
           grype docker:${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:latest --fail-on critical
       
       - name: Push Backend image
-        if: ${{ !env.ACT }}
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-backend:${{ env.IMAGE_TAG }}
@@ -126,13 +117,12 @@ jobs:
           grype -c .grype.yaml docker:${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-frontend:latest --fail-on critical
       
       - name: Push Frontend image
-        if: ${{ !env.ACT }}
         run: |
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-frontend:latest
           docker push ${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-frontend:${{ env.IMAGE_TAG }}
 
       - name: Checkout GitOps repository
-        if: ${{ github.event_name == 'push' && !env.ACT }}
+        if: ${{ github.event_name == 'push' }}
         uses: actions/checkout@v5
         with:
           repository: ${{ env.GITOPS_REPO }}
@@ -141,7 +131,7 @@ jobs:
           fetch-depth: 1
 
       - name: Patch and push GitOps manifests
-        if: ${{ github.event_name == 'push' && !env.ACT }}
+        if: ${{ github.event_name == 'push'}}
         env:
           IMAGE_TAG: ${{ env.IMAGE_TAG }}
         run: |

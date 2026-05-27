@@ -1,12 +1,39 @@
 // BLOG PAGE API (local)
+function sanitizeUrl(url) {
+  if (!url) return "";
+  try {
+    const parsed = new URL(url, window.location.origin);
+    
+    if (parsed.protocol === "http:" || parsed.protocol === "https:") {
+      return parsed.href;
+    }
+  } catch (error) {
+    return "";
+  }
+  return "";
+}
+
 let API_BASE = "/api/blog";
 const AUTH_BASE = "/api/auth";
 
-// optional override: ?api=http://localhost:5000/api/blog
+const ALLOWED_DOMAINS = ["localhost", "127.0.0.1", window.location.hostname];
+
 (() => {
   const u = new URL(window.location.href);
   const api = u.searchParams.get("api");
-  if (api) API_BASE = api.replace(/\/$/, "");
+
+  if (api) {
+    try {
+      const parsedApi = new URL(api);
+      if (ALLOWED_DOMAINS.includes(parsedApi.hostname)) {
+        API_BASE = api.replace(/\/$/, "");
+      } else {
+        console.warn("Domain API không được phép truy cập.");
+      }
+    } catch (error) {
+      console.error("Định dạng API URL không hợp lệ.");
+    }
+  }
 })();
 
 const $ = (id) => document.getElementById(id);
@@ -70,7 +97,13 @@ function bindReadMoreButtons() {
 const relatedPageSize = 2;
 
 async function getJSON(path) {
-  const res = await fetch(`${API_BASE}${path}`, { credentials: "include" });
+  const requestUrl = new URL(API_BASE + path, window.location.origin);
+
+  if (!ALLOWED_DOMAINS.includes(requestUrl.hostname)) {
+    throw new Error(`Security blocked: Invalid API domain ${requestUrl.hostname}`);
+  }
+
+  const res = await fetch(requestUrl.href, { credentials: "include" });
   if (!res.ok) throw new Error(`Fetch failed: ${path}`);
   return res.json();
 }
@@ -200,7 +233,8 @@ async function loadAll() {
 
   $("heroTitle").textContent = hero.title || "";
   $("heroExcerpt").textContent = hero.excerpt || "";
-  $("heroImage").src = hero.hero_image_url || hero.thumbnail_url || "";
+  const rawUrl = hero.hero_image_url || hero.thumbnail_url || "";
+  $("heroImage").src = sanitizeUrl(rawUrl);
 
   renderReading(cats);
   renderRelated(related);
@@ -241,10 +275,9 @@ function wireEvents() {
 }
 
 (async function main() {
-  await requireAuthAndHydrateUser();
-
-  wireEvents();
   try {
+    await requireAuthAndHydrateUser();
+    wireEvents();
     await loadAll();
   } catch (e) {
     console.error(e);
