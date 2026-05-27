@@ -75,6 +75,7 @@ jobs:
             "-Dsonar.projectKey=linhphuongbae_linguasphere-devops"
             "-Dsonar.organization=linhphuongbae"
             "-Dsonar.sources=backend,frontend"
+            "-Dsonar.branch.name=${{ github.ref_name }}"
             "-Dsonar.scm.provide=git"
             "-Dsonar.verbose=true"
         env:
