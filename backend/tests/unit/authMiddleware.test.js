@@ -1,7 +1,7 @@
 const jwt = require("jsonwebtoken");
 const authMiddleware = require("../../src/middleware/authMiddleware");
 
-const JWT_SECRET = "test_secret_key_for_unit_tests";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 // Helper: create mock req, res, next
 function mockReq(cookieToken = null) {

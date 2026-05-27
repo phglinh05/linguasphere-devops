@@ -23,7 +23,7 @@ const { createApp } = require("../../app");
 let app;
 
 beforeAll(() => {
-  process.env.JWT_SECRET = "test_secret";
+  process.env.JWT_SECRET = process.env.JWT_SECRET;
   app = createApp();
 });
 

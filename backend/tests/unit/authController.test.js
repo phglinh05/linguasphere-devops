@@ -6,7 +6,7 @@ jest.mock("../../src/models/User");
 const User = require("../../src/models/User");
 const authController = require("../../src/controllers/authController");
 
-const JWT_SECRET = "unit_test_secret";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function mockRes() {
   const res = {};
