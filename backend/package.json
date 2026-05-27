@@ -1,11 +1,24 @@
 {
+  "name": "linguasphere-backend",
+  "private": true,
+  "scripts": {
+    "test": "npm run test:unit && npm run test:integration",
+    "test:unit": "jest -c jest.unit.config.js --coverage",
+    "test:integration": "jest -c jest.integration.config.js --coverage"
+  },
   "dependencies": {
     "bcryptjs": "^3.0.3",
+    "cors": "^2.8.5",
     "cookie-parser": "^1.4.7",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.3",
     "minimatch": "^10.2.3",
     "mongoose": "^9.3.3",
     "tar": "^7.5.11"
+  },
+  "devDependencies": {
+    "jest": "^29.7.0",
+    "jest-junit": "^16.0.0",
+    "supertest": "^7.0.0"
   }
 }
