@@ -45,21 +45,6 @@ jobs:
           cd backend
           npm ci
 
-      - name: SonarCloud Scan
-        uses: SonarSource/sonarqube-scan-action@v8
-        with:
-          projectBaseDir: .
-          args: >
-            "-Dsonar.projectKey=linhphuongbae_linguasphere-devops"
-            "-Dsonar.organization=linhphuongbae"
-            "-Dsonar.sources=backend,frontend"
-            "-Dsonar.branch.name=develop"
-            "-Dsonar.scm.provide=git"
-            "-Dsonar.verbose=true"
-        env:
-          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-          SONAR_HOST_URL: https://sonarcloud.io
-
       - name: Run Unit Tests
         run: |
           cd backend
@@ -81,6 +66,21 @@ jobs:
           name: coverage-report
           path: backend/coverage/
           retention-days: 7
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarqube-scan-action@v8
+        with:
+          projectBaseDir: .
+          args: >
+            "-Dsonar.projectKey=linhphuongbae_linguasphere-devops"
+            "-Dsonar.organization=linhphuongbae"
+            "-Dsonar.sources=backend,frontend"
+            "-Dsonar.branch.name=develop"
+            "-Dsonar.scm.provide=git"
+            "-Dsonar.verbose=true"
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+          SONAR_HOST_URL: https://sonarcloud.io
       
       - name: Login to DockerHub
         if: ${{ !env.ACT }}
