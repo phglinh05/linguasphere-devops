@@ -118,7 +118,7 @@ jobs:
       
       - name: Scan Frontend with Grype
         run: |
-          grype docker:${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-frontend:latest --fail-on critical
+          grype -c .grype.yaml docker:${{ secrets.DOCKERHUB_USERNAME }}/linguasphere-frontend:latest --fail-on critical
       
       - name: Push Frontend image
         if: ${{ !env.ACT }}
