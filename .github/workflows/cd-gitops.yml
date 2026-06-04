@@ -1,0 +1,173 @@
+name: CD GitOps
+
+on:
+ workflow_call:
+   inputs:
+     service:
+       required: true
+       type: string
+     image_tag:
+       required: true
+       type: string
+
+permissions:
+ contents: read
+
+jobs:
+ update_gitops_dev:
+   name: Update GitOps Dev
+   if: github.ref_name == 'develop'
+   runs-on: ubuntu-latest
+   environment:
+     name: development
+
+   steps:
+     - name: Checkout GitOps repository
+       uses: actions/checkout@v4
+       with:
+         repository: ${{ vars.GITOPS_REPO }}
+         token: ${{ secrets.GITOPS_TOKEN }}
+         path: gitops
+         fetch-depth: 0
+
+     - name: Install yq
+       run: |
+         sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+         sudo chmod +x /usr/local/bin/yq
+         yq --version
+
+     - name: Update dev image tag using yq
+       working-directory: gitops
+       env:
+         SERVICE: ${{ inputs.service }}
+         IMAGE_TAG: ${{ inputs.image_tag }}
+         ENV_NAME: dev
+       run: |
+         set -euo pipefail
+
+         VALUES_FILE="charts/linguasphere/values-${ENV_NAME}.yaml"
+
+         if [ "$SERVICE" = "backend" ]; then
+           yq -i '.backend.image.tag = strenv(IMAGE_TAG)' "$VALUES_FILE"
+         elif [ "$SERVICE" = "frontend" ]; then
+           yq -i '.frontend.image.tag = strenv(IMAGE_TAG)' "$VALUES_FILE"
+         else
+           echo "Unsupported service: $SERVICE"
+           exit 1
+         fi
+
+         echo "Updated $VALUES_FILE"
+         yq ".$SERVICE.image.tag" "$VALUES_FILE"
+
+     - name: Create GitOps PR for dev
+       working-directory: gitops
+       env:
+         GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+         GITOPS_REPO: ${{ vars.GITOPS_REPO }}
+         SERVICE: ${{ inputs.service }}
+         IMAGE_TAG: ${{ inputs.image_tag }}
+       run: |
+         set -euo pipefail
+
+         SHORT_SHA="${IMAGE_TAG:0:7}"
+         BRANCH="ci/update-${SERVICE}-dev-${SHORT_SHA}"
+
+         git config user.name "github-actions[bot]"
+         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+         git checkout -b "$BRANCH"
+         git add charts/linguasphere/values-dev.yaml
+
+         if git diff --cached --quiet; then
+           echo "No GitOps changes."
+           exit 0
+         fi
+
+         git commit -m "ci: update ${SERVICE} dev image to ${SHORT_SHA}"
+         git push origin "$BRANCH"
+
+         gh pr create \
+           --repo "$GITOPS_REPO" \
+           --base main \
+           --head "$BRANCH" \
+           --title "ci: update ${SERVICE} dev image to ${SHORT_SHA}" \
+           --body "Update ${SERVICE} image tag in values-dev.yaml to ${IMAGE_TAG}."
+
+ update_gitops_prod:
+   name: Update GitOps Production
+   if: github.ref_name == 'main'
+   runs-on: ubuntu-latest
+   environment:
+     name: production
+
+   steps:
+     - name: Checkout GitOps repository
+       uses: actions/checkout@v4
+       with:
+         repository: ${{ vars.GITOPS_REPO }}
+         token: ${{ secrets.GITOPS_TOKEN }}
+         path: gitops
+         fetch-depth: 0
+
+     - name: Install yq
+       run: |
+         sudo wget -qO /usr/local/bin/yq https://github.com/mikefarah/yq/releases/download/v4.44.3/yq_linux_amd64
+         sudo chmod +x /usr/local/bin/yq
+         yq --version
+
+     - name: Update prod image tag using yq
+       working-directory: gitops
+       env:
+         SERVICE: ${{ inputs.service }}
+         IMAGE_TAG: ${{ inputs.image_tag }}
+         ENV_NAME: prod
+       run: |
+         set -euo pipefail
+
+         VALUES_FILE="charts/linguasphere/values-${ENV_NAME}.yaml"
+
+         if [ "$SERVICE" = "backend" ]; then
+           yq -i '.backend.image.tag = strenv(IMAGE_TAG)' "$VALUES_FILE"
+         elif [ "$SERVICE" = "frontend" ]; then
+           yq -i '.frontend.image.tag = strenv(IMAGE_TAG)' "$VALUES_FILE"
+         else
+           echo "Unsupported service: $SERVICE"
+           exit 1
+         fi
+
+         echo "Updated $VALUES_FILE"
+         yq ".$SERVICE.image.tag" "$VALUES_FILE"
+
+     - name: Create GitOps PR for production
+       working-directory: gitops
+       env:
+         GH_TOKEN: ${{ secrets.GITOPS_TOKEN }}
+         GITOPS_REPO: ${{ vars.GITOPS_REPO }}
+         SERVICE: ${{ inputs.service }}
+         IMAGE_TAG: ${{ inputs.image_tag }}
+       run: |
+         set -euo pipefail
+
+         SHORT_SHA="${IMAGE_TAG:0:7}"
+         BRANCH="ci/update-${SERVICE}-prod-${SHORT_SHA}"
+
+         git config user.name "github-actions[bot]"
+         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+         git checkout -b "$BRANCH"
+         git add charts/linguasphere/values-prod.yaml
+
+         if git diff --cached --quiet; then
+           echo "No GitOps changes."
+           exit 0
+         fi
+
+         git commit -m "ci: update ${SERVICE} prod image to ${SHORT_SHA}"
+         git push origin "$BRANCH"
+
+         gh pr create \
+           --repo "$GITOPS_REPO" \
+           --base main \
+           --head "$BRANCH" \
+           --title "ci: update ${SERVICE} prod image to ${SHORT_SHA}" \
+           --body "Update ${SERVICE} image tag in values-prod.yaml to ${IMAGE_TAG}. Production job was gated by GitHub Environment reviewers."
