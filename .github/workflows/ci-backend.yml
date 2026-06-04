@@ -1,0 +1,177 @@
+name: CI Backend
+
+on:
+ pull_request:
+   branches: [develop, main]
+   paths:
+     - "backend/**"
+     - "docker/docker-compose.yml"
+     - ".github/workflows/ci-backend.yml"
+     - ".github/workflows/cd-gitops.yml"
+
+ push:
+   branches: [develop, main]
+   paths:
+     - "backend/**"
+     - "docker/docker-compose.yml"
+     - ".github/workflows/ci-backend.yml"
+     - ".github/workflows/cd-gitops.yml"
+
+permissions:
+ contents: read
+
+env:
+ IMAGE_TAG: ${{ github.sha }}
+ IMAGE_NAME: devopsnhom9/linguasphere-backend
+
+jobs:
+ test:
+   name: Test Backend
+   runs-on: ubuntu-latest
+
+   steps:
+     - name: Checkout source
+       uses: actions/checkout@v4
+       with:
+         fetch-depth: 0
+
+     - name: Setup Node.js
+       uses: actions/setup-node@v4
+       with:
+         node-version: 20
+         cache: npm
+         cache-dependency-path: backend/package-lock.json
+
+     - name: Install backend dependencies
+       run: |
+         cd backend
+         npm ci
+
+     - name: Run backend unit tests
+       run: |
+         cd backend
+         npm run test:unit -- --ci --coverage --reporters=default --reporters=jest-junit
+       env:
+         JWT_SECRET: ${{ secrets.JWT_SECRET }}
+
+     - name: Upload backend coverage
+       uses: actions/upload-artifact@v4
+       if: always()
+       with:
+         name: backend-coverage
+         path: backend/coverage/
+         retention-days: 7
+
+ scan_source:
+   name: Scan Backend Source
+   runs-on: ubuntu-latest
+   needs: test
+
+   steps:
+     - name: Checkout source
+       uses: actions/checkout@v4
+       with:
+         fetch-depth: 0
+
+     - name: Download backend coverage
+       uses: actions/download-artifact@v4
+       with:
+         name: backend-coverage
+         path: backend/coverage/
+
+     - name: SonarQube/SonarCloud scan
+       continue-on-error: true
+       uses: SonarSource/sonarqube-scan-action@v8
+       env:
+         SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+         SONAR_HOST_URL: https://sonarcloud.io
+       with:
+         projectBaseDir: .
+         args: >
+           -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
+           -Dsonar.organization=${{ vars.SONAR_ORGANIZATION }}
+           -Dsonar.sources=backend
+           -Dsonar.tests=backend/tests
+           -Dsonar.test.inclusions=backend/tests/**/*.test.js
+           -Dsonar.exclusions=**/node_modules/**,backend/coverage/**
+           -Dsonar.javascript.lcov.reportPaths=backend/coverage/unit/lcov.info
+
+ build_image:
+   name: Build Backend Image
+   runs-on: ubuntu-latest
+   needs: [test, scan_source]
+
+   steps:
+     - name: Checkout source
+       uses: actions/checkout@v4
+
+     - name: Setup Docker Buildx
+       uses: docker/setup-buildx-action@v3
+
+     - name: Build backend image locally with cache
+       uses: docker/build-push-action@v6
+       with:
+         context: ./backend
+         load: true
+         push: false
+         tags: |
+           ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+           ${{ env.IMAGE_NAME }}:latest
+         cache-from: type=gha,scope=backend
+         cache-to: type=gha,mode=max,scope=backend
+
+ scan_image:
+   name: Scan Backend Image
+   runs-on: ubuntu-latest
+   needs: build_image
+
+   steps:
+     - name: Install Grype
+       run: |
+         curl -sSfL https://raw.githubusercontent.com/anchore/grype/main/install.sh | sh
+         sudo mv ./bin/grype /usr/local/bin/grype
+
+     - name: Scan backend image with Grype
+       continue-on-error: true
+       run: |
+         grype docker:${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }} --fail-on high
+
+ push_image:
+   name: Push Backend Image
+   runs-on: ubuntu-latest
+   needs: scan_image
+   if: github.event_name == 'push'
+
+   steps:
+     - name: Checkout source
+       uses: actions/checkout@v4
+
+     - name: Setup Docker Buildx
+       uses: docker/setup-buildx-action@v3
+
+     - name: Login to DockerHub
+       uses: docker/login-action@v3
+       with:
+         username: devopsnhom9
+         password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+     - name: Build and push backend image
+       uses: docker/build-push-action@v6
+       with:
+         context: ./backend
+         push: true
+         tags: |
+           ${{ env.IMAGE_NAME }}:${{ env.IMAGE_TAG }}
+           ${{ env.IMAGE_NAME }}:latest
+         cache-from: type=gha,scope=backend
+         cache-to: type=gha,mode=max,scope=backend
+
+ update_gitops:
+   name: Update GitOps Backend
+   needs: push_image
+   if: github.event_name == 'push'
+   uses: ./.github/workflows/cd-gitops.yml
+   with:
+     service: backend
+     image_tag: ${{ github.sha }}
+   secrets: inherit

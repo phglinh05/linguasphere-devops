@@ -6,7 +6,7 @@ jest.mock("../../src/models/User");
 const User = require("../../src/models/User");
 const authController = require("../../src/controllers/authController");
 
-const JWT_SECRET = "unit_test_secret";
+const JWT_SECRET = process.env.JWT_SECRET;
 
 function mockRes() {
   const res = {};
@@ -86,6 +86,15 @@ describe("Unit Test — authController.register", () => {
 // login
 // ═══════════════════════════════════════════════════════
 describe("Unit Test — authController.login", () => {
+  test("Sanitizes non-string username to empty string — returns 400", async () => {
+    User.findOne.mockResolvedValue(null);
+    const req = { body: { username: 12345, password: "pass" } }; // username là number
+    const res = mockRes();
+    await authController.login(req, res);
+    expect(User.findOne).toHaveBeenCalledWith({ username: "" });
+    expect(res.status).toHaveBeenCalledWith(400);
+    expect(res.json).toHaveBeenCalledWith({ message: "Invalid credentials" });
+  });
 
   test("Returns 400 when user does not exist", async () => {
     User.findOne.mockResolvedValue(null);

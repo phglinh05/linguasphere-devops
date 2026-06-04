@@ -10,10 +10,11 @@ RUN apk update && apk upgrade --no-cache
 COPY package*.json ./
 
 # 4. Install dependencies
-RUN npm install --omit=dev --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts
 
 # Copy application files
 COPY server.js ./
+COPY app.js ./
 COPY src ./src
 
 # Create a non-root user and give ownership of the app directory
