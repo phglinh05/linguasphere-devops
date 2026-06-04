@@ -169,7 +169,7 @@ jobs:
  update_gitops:
    name: Update GitOps Backend
    needs: push_image
-   if: github.event_name == 'push'
+   if: false
    uses: ./.github/workflows/cd-gitops.yml
    with:
      service: backend
